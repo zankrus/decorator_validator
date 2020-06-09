@@ -1,13 +1,11 @@
 """Файл для работы с JSON."""
 import random
-import re
-from service import approve_cod, id_randomizer, address_creater, status_randomizer, weight_generator, create_time, \
-    name_randomizer
 
+from service import approve_cod, id_randomizer, address_creater, status_randomizer,  create_time
 
 def json_messager() -> dict:
-    """Тестовая функция-генерирует тестовые JSON, как валидный так и нет."""
-    random_event = random.randint(1, 6)
+    """Тестовая функция-генерирует тестовые JSON, как валидные так и нет."""
+    random_event = random.randint(1, 1)
     if random_event > 2:
         json_valid = {
             "id": id_randomizer(),

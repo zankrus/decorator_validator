@@ -28,7 +28,7 @@ def address_creater() -> str:
 
 def status_randomizer() -> str:
     """Генерация случайного статуса посылки."""
-    list_of_statuses = ['В обработке', 'Доставляется ', 'Доставлено']
+    list_of_statuses = ['В обработке', 'Доставляется ', 'Доставлено', 'НЕГАТИВНЫЙ СТАТУС', 'ARARARARA']
     status = random.choice(list_of_statuses)
     return status
 
