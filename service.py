@@ -1,6 +1,8 @@
 """Файл для хранения вспомогательных функций."""
 import random
 import string
+from typing import Generator
+
 from faker import Faker
 
 fake = Faker("ru_RU")
@@ -40,14 +42,14 @@ def weight_generator() -> int:
 
 
 def create_time() -> str:
-    """Генерация времени создания запроса"""
+    """Генерация времени создания запроса."""
     time = fake.date_time_this_year()
     return time
 
 
 def id_randomizer() -> str:
-    """Генератор айди отправления"""
-    def id_generator():
+    """Генератор айди отправления."""
+    def id_generator() -> Generator:
         for i in string.ascii_uppercase:
             for digit in range(1, 10):
                 id = ''
@@ -60,5 +62,6 @@ def id_randomizer() -> str:
 
 
 def name_randomizer() -> str:
+    """рандом имени."""
     name = fake.name()
     return name

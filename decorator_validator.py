@@ -1,11 +1,11 @@
-"""Файл валидатор"""
-from typing import Callable, Any, Optional, Match
+"""Файл валидатор. Тут хранятся функции, которые принимает декоратор."""
+from typing import Callable, Any
 import re
 
 import jsonschema
 from jsonschema import validate
+
 from json_schema import SCHEMA
-from jsoner import json_messager
 
 
 def input_validation(input_json: dict, schema: dict = SCHEMA) -> Any:
@@ -15,67 +15,80 @@ def input_validation(input_json: dict, schema: dict = SCHEMA) -> Any:
         validate(input_json, schema)
         return input_json
     except jsonschema.exceptions.ValidationError:
-        print('Json прошел проверку валидации схемы')
+        print('Json  провалил проверку валидации схемы')
         raise Exception('InputParameterVerificationError')
 
 
-def output_validation(str):
+def output_validation(str: str) -> bool:
     """Проверка на название статуса."""
-    result = re.fullmatch("(?i)(\W|^)(В\sобработке|Доставляется|Доставлено)(\W|$)", str)
+    result = re.fullmatch(r"(?i)(\W|^)(В\sобработке|Доставляется|Доставлено)(\W|$)", str)
     if bool(result):
         print('Проверка соответствия статуса регулярному выражению прошла успешно')
-        return result
+        return bool(result)
     else:
         print('Проверка соответствия статуса регулярному выражению провалена')
         raise Exception('ResultVerificationError')
 
 
-def default_func():
+def default_func() -> None:
     """Функция при провале повторений."""
-    print('Функция провалена')
-
-
-class ResultVerificationError(BaseException):
-    pass
-
-
-class InputParameterVerificationError(BaseException):
-    pass
+    print('Количество попыток превышено. Запущена дефолт-функция')
 
 
 def decorator(input_validator: Callable, result_validation: Callable, on_fail_repeat_times: int = 1,
-              default_behaviour: Callable = None):
-    def outer_wrapper(function):
-        def wrapper(*args,**kwargs):
-            print('Начало валидации')
-            for i in range(on_fail_repeat_times):
-                try:
-                    input_validator(*args, **kwargs)
-                    result_validation(dict(*args, ** kwargs)['status'])
-                except InputParameterVerificationError :
-                    print('Ошибка валидации схемы')
-                except ResultVerificationError:
-                    print('Ошибка валидации статуса')
+              default_behaviour: Callable = None) -> Callable:
+    """Функция декоратор."""
+    if on_fail_repeat_times == 0:
+        raise Exception('Parameter on_fail_repeat_times cannot be zero')
 
-            print('Валидация успешно проведена')
+    def outer_wrapper(function: Callable) -> Callable:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            print('')
+            print('')
+            print('Начало валидации')
+            if on_fail_repeat_times < 0:
+                while True:
+                    try:
+                        input_validator(*args, **kwargs)
+                        result_validation(dict(*args, **kwargs)['status'])
+                        print('Валидация успешно проведена')
+                        break
+                    except Exception:
+                        print('Ошибка валидации')
+
+            else:
+                for i in range(1, on_fail_repeat_times + 1):
+                    print('Попытка валидации № {}'.format(i))
+                    try:
+                        schema_result = input_validator(*args, **kwargs)
+                        re_result = result_validation(dict(*args, **kwargs)['status'])
+                        if schema_result and re_result:
+                            print('Валидация успешно проведена')
+                            break
+                    except Exception:
+                        print('Ошибка валидации')
+                        if default_behaviour is not None and i == on_fail_repeat_times:
+                            default_behaviour()
+                            return False
+                        elif i == on_fail_repeat_times:
+                            return False
             print('')
             print('Выполняется основная функция')
             res = function(*args)
             return res
+
         return wrapper
+
     return outer_wrapper
 
 
 @decorator(
     input_validator=input_validation,
     result_validation=output_validation,
-    on_fail_repeat_times=2,
+    on_fail_repeat_times=5,
     default_behaviour=default_func)
 def homework_function(json: dict) -> str:
     """Функция которая выдает сообщение о номере заказа и статусе."""
     string = 'Номер заказа ' + str(json['id']) + ' .Статус заказа : ' + str(json['status'])
     print(string)
     return string
-
-
-homework_function(json_messager())
